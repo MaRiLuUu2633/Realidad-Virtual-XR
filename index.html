@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Visualización 3D - Prótesis de Cadera</title>
+  <title>Visualización 3D - Auto Deportivo</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; overflow: hidden; font-family: Arial, sans-serif; }
@@ -25,39 +25,42 @@
 </head>
 <body>
   <div id="info">
-    <h2>Prótesis Total de Cadera</h2>
-    Arrastra con el mouse (o el dedo) para orbitar la cámara. Usa la rueda para hacer zoom.
+    <h2>Auto Deportivo 3D</h2>
+    Arrastra con el mouse (o el dedo) para orbitar la cámara. Usa la rueda para hacer zoom.<br>
+    Usa las teclas <b>W A S D</b> para desplazarte por la escena.
     <br><br>
     <b>Componentes:</b><br>
-    🦴 Hueso pélvico (ilion)<br>
-    ⚪ Cotilo acetabular (metal)<br>
-    ⚪ Revestimiento (polietileno)<br>
-    🔵 Cabeza femoral<br>
-    ➖ Cuello protésico<br>
-    🟨 Vástago femoral<br>
-    🦴 Fémur
+    🚗 Chasis / carrocería<br>
+    🪟 Cabina y parabrisas<br>
+    ⚫ Ruedas y llantas<br>
+    💡 Faros delanteros<br>
+    🔴 Luces traseras<br>
+    🏁 Alerón trasero
   </div>
 
   <script>
     AFRAME.registerComponent('simple-orbit', {
       schema: {
-        target: {type: 'vec3', default: {x: 0, y: -0.15, z: 0}},
-        distance: {type: 'number', default: 1.5},
-        minDistance: {type: 'number', default: 0.4},
-        maxDistance: {type: 'number', default: 5}
+        target: {type: 'vec3', default: {x: 0, y: 0.5, z: 0}},
+        distance: {type: 'number', default: 4},
+        minDistance: {type: 'number', default: 1},
+        maxDistance: {type: 'number', default: 10}
       },
       init: function () {
-        this.theta = 20;   // ángulo horizontal (grados)
-        this.phi = 70;     // ángulo vertical desde arriba (grados)
+        this.theta = 30;   // ángulo horizontal (grados)
+        this.phi = 65;     // ángulo vertical desde arriba (grados)
         this.distance = this.data.distance;
         this.isDragging = false;
         this.lastX = 0;
         this.lastY = 0;
+        this.keys = {w: false, a: false, s: false, d: false};
 
         this.onDown = this.onDown.bind(this);
         this.onMove = this.onMove.bind(this);
         this.onUp = this.onUp.bind(this);
         this.onWheel = this.onWheel.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+        this.onKeyUp = this.onKeyUp.bind(this);
 
         var canvasEl = this.el.sceneEl.canvas;
         var attach = function (el) {
@@ -77,6 +80,9 @@
             attach(this.el.sceneEl.canvas);
           }.bind(this));
         }
+
+        window.addEventListener('keydown', this.onKeyDown);
+        window.addEventListener('keyup', this.onKeyUp);
 
         this.updateCamera();
       },
@@ -114,6 +120,36 @@
         this.distance = Math.max(this.data.minDistance, Math.min(this.data.maxDistance, this.distance));
         this.updateCamera();
       },
+      onKeyDown: function (e) {
+        var k = e.key.toLowerCase();
+        if (k in this.keys) this.keys[k] = true;
+      },
+      onKeyUp: function (e) {
+        var k = e.key.toLowerCase();
+        if (k in this.keys) this.keys[k] = false;
+      },
+      tick: function (time, delta) {
+        if (!delta) return;
+        if (!this.keys.w && !this.keys.a && !this.keys.s && !this.keys.d) return;
+
+        var moveSpeed = 2.0 * (delta / 1000);
+        var thetaRad = THREE.MathUtils.degToRad(this.theta);
+        var forward = new THREE.Vector3(Math.sin(thetaRad), 0, Math.cos(thetaRad));
+        var right = new THREE.Vector3(Math.cos(thetaRad), 0, -Math.sin(thetaRad));
+        var moveDir = new THREE.Vector3();
+
+        if (this.keys.w) moveDir.add(forward.clone().multiplyScalar(-1));
+        if (this.keys.s) moveDir.add(forward.clone().multiplyScalar(1));
+        if (this.keys.a) moveDir.add(right.clone().multiplyScalar(-1));
+        if (this.keys.d) moveDir.add(right.clone().multiplyScalar(1));
+
+        if (moveDir.lengthSq() > 0) {
+          moveDir.normalize().multiplyScalar(moveSpeed);
+          this.data.target.x += moveDir.x;
+          this.data.target.z += moveDir.z;
+          this.updateCamera();
+        }
+      },
       updateCamera: function () {
         var phiRad = THREE.MathUtils.degToRad(this.phi);
         var thetaRad = THREE.MathUtils.degToRad(this.theta);
@@ -129,81 +165,100 @@
         window.removeEventListener('mouseup', this.onUp);
         window.removeEventListener('touchmove', this.onMove);
         window.removeEventListener('touchend', this.onUp);
+        window.removeEventListener('keydown', this.onKeyDown);
+        window.removeEventListener('keyup', this.onKeyUp);
       }
     });
   </script>
 
-  <a-scene background="color: #cfe8f2">
+  <a-scene background="color: #bfe3f2">
 
     <a-assets>
-      <a-mixin id="metal" material="metalness: 0.8; roughness: 0.3; color: #b0b3b8"></a-mixin>
-      <a-mixin id="titanium" material="metalness: 0.7; roughness: 0.35; color: #7d7f85"></a-mixin>
-      <a-mixin id="bone" material="metalness: 0; roughness: 0.9; color: #eadfc7"></a-mixin>
-      <a-mixin id="poly" material="metalness: 0; roughness: 0.6; color: #f5f5f0"></a-mixin>
+      <a-mixin id="paint" material="metalness: 0.7; roughness: 0.3; color: #c0392b"></a-mixin>
+      <a-mixin id="glass" material="metalness: 0.1; roughness: 0.05; color: #1b2631; opacity: 0.55; transparent: true"></a-mixin>
+      <a-mixin id="tire" material="metalness: 0.05; roughness: 0.9; color: #1c1c1c"></a-mixin>
+      <a-mixin id="rim" material="metalness: 0.9; roughness: 0.2; color: #d5d8dc"></a-mixin>
+      <a-mixin id="chrome" material="metalness: 0.9; roughness: 0.15; color: #ecf0f1"></a-mixin>
     </a-assets>
 
     <!-- Cámara con control de órbita propio -->
-    <a-entity camera="fov: 50" simple-orbit="target: 0 -0.15 0; distance: 1.6; minDistance: 0.4; maxDistance: 5"></a-entity>
+    <a-entity camera="fov: 50" simple-orbit="target: 0 0.5 0; distance: 4; minDistance: 1; maxDistance: 10"></a-entity>
 
     <!-- Iluminación -->
     <a-light type="ambient" intensity="0.6"></a-light>
-    <a-light type="directional" intensity="0.8" position="2 4 3"></a-light>
-    <a-light type="directional" intensity="0.4" position="-2 2 -3"></a-light>
+    <a-light type="directional" intensity="0.9" position="3 5 4"></a-light>
+    <a-light type="directional" intensity="0.4" position="-3 2 -4"></a-light>
 
-    <!-- Grupo principal: escena anatómica, centrado en el origen -->
-    <a-entity id="hip-assembly" position="0 0 0">
+    <!-- Grupo principal: el auto, centrado en el origen -->
+    <a-entity id="car" position="0 0 0">
 
-      <!-- Hueso pélvico simplificado (ilion) -->
-      <a-entity position="0 0.35 0">
-        <a-torus mixin="bone" radius="0.22" radius-tubular="0.07"
-                 rotation="90 0 0" position="0 0.05 0"></a-torus>
-        <a-sphere mixin="bone" radius="0.16" position="0 0.22 -0.02"></a-sphere>
-        <a-text value="Hueso pelvico (ilion)" color="#333" align="center"
-                position="-0.35 0.35 0" scale="0.35 0.35 0.35"></a-text>
+      <!-- Chasis / carrocería principal -->
+      <a-box mixin="paint" width="1.3" height="0.35" depth="2.6" position="0 0.35 0"></a-box>
+      <a-text value="Chasis" color="#333" align="center" position="0.9 0.35 0" scale="0.3 0.3 0.3"></a-text>
+
+      <!-- Cabina -->
+      <a-box mixin="paint" width="1.0" height="0.42" depth="1.3" position="0 0.72 -0.1"></a-box>
+      <a-text value="Cabina" color="#333" align="center" position="0.85 0.85 -0.1" scale="0.3 0.3 0.3"></a-text>
+
+      <!-- Parabrisas delantero -->
+      <a-box mixin="glass" width="0.92" height="0.4" depth="0.05"
+             position="0 0.75 -0.74" rotation="-20 0 0"></a-box>
+      <a-text value="Parabrisas" color="#333" align="center" position="-0.85 0.9 -0.74" scale="0.3 0.3 0.3"></a-text>
+
+      <!-- Luneta trasera -->
+      <a-box mixin="glass" width="0.92" height="0.38" depth="0.05"
+             position="0 0.74 0.54" rotation="18 0 0"></a-box>
+
+      <!-- Ventanas laterales -->
+      <a-box mixin="glass" width="0.05" height="0.3" depth="1.0" position="0.48 0.75 -0.1"></a-box>
+      <a-box mixin="glass" width="0.05" height="0.3" depth="1.0" position="-0.48 0.75 -0.1"></a-box>
+
+      <!-- Ruedas y llantas (4) -->
+      <a-entity id="wheel-fl" position="0.68 0.3 -0.85">
+        <a-cylinder mixin="tire" radius="0.3" height="0.22" rotation="0 0 90"></a-cylinder>
+        <a-cylinder mixin="rim" radius="0.15" height="0.24" rotation="0 0 90"></a-cylinder>
       </a-entity>
+      <a-entity id="wheel-fr" position="-0.68 0.3 -0.85">
+        <a-cylinder mixin="tire" radius="0.3" height="0.22" rotation="0 0 90"></a-cylinder>
+        <a-cylinder mixin="rim" radius="0.15" height="0.24" rotation="0 0 90"></a-cylinder>
+      </a-entity>
+      <a-entity id="wheel-rl" position="0.68 0.3 0.85">
+        <a-cylinder mixin="tire" radius="0.3" height="0.22" rotation="0 0 90"></a-cylinder>
+        <a-cylinder mixin="rim" radius="0.15" height="0.24" rotation="0 0 90"></a-cylinder>
+      </a-entity>
+      <a-entity id="wheel-rr" position="-0.68 0.3 0.85">
+        <a-cylinder mixin="tire" radius="0.3" height="0.22" rotation="0 0 90"></a-cylinder>
+        <a-cylinder mixin="rim" radius="0.15" height="0.24" rotation="0 0 90"></a-cylinder>
+      </a-entity>
+      <a-text value="Ruedas" color="#333" align="center" position="1.0 0.3 0.85" scale="0.3 0.3 0.3"></a-text>
 
-      <!-- Componente acetabular: cotilo metálico -->
-      <a-sphere mixin="metal" radius="0.09"
-                geometry="primitive: sphere; radius: 0.09; thetaStart: 0; thetaLength: 100"
-                rotation="180 0 0" position="0 0 0"></a-sphere>
-      <a-text value="Cotilo acetabular" color="#333" align="center"
-              position="0.3 0.05 0" scale="0.3 0.3 0.3"></a-text>
+      <!-- Faros delanteros -->
+      <a-sphere mixin="chrome" radius="0.08" position="0.45 0.35 -1.29" material="emissive:#fff9c4; emissiveIntensity:0.4"></a-sphere>
+      <a-sphere mixin="chrome" radius="0.08" position="-0.45 0.35 -1.29" material="emissive:#fff9c4; emissiveIntensity:0.4"></a-sphere>
+      <a-text value="Faros" color="#333" align="center" position="0.85 0.35 -1.29" scale="0.3 0.3 0.3"></a-text>
 
-      <!-- Revestimiento de polietileno (dentro del cotilo) -->
-      <a-sphere mixin="poly" radius="0.075"
-                geometry="primitive: sphere; radius: 0.075; thetaStart: 0; thetaLength: 95"
-                rotation="180 0 0" position="0 0 0"></a-sphere>
-      <a-text value="Revestimiento (polietileno)" color="#333" align="center"
-              position="0.35 -0.05 0" scale="0.3 0.3 0.3"></a-text>
+      <!-- Luces traseras -->
+      <a-box width="0.12" height="0.1" depth="0.03" color="#c0392b" position="0.45 0.35 1.29" material="emissive:#e74c3c; emissiveIntensity:0.5"></a-box>
+      <a-box width="0.12" height="0.1" depth="0.03" color="#c0392b" position="-0.45 0.35 1.29" material="emissive:#e74c3c; emissiveIntensity:0.5"></a-box>
+      <a-text value="Luces traseras" color="#333" align="center" position="-0.9 0.35 1.29" scale="0.3 0.3 0.3"></a-text>
 
-      <!-- Cabeza femoral -->
-      <a-sphere mixin="metal" radius="0.065" position="0 -0.05 0.15"></a-sphere>
-      <a-text value="Cabeza femoral" color="#333" align="center"
-              position="0.3 -0.2 0.2" scale="0.3 0.3 0.3"></a-text>
+      <!-- Alerón trasero -->
+      <a-box mixin="chrome" width="1.05" height="0.04" depth="0.18" position="0 0.95 1.15"></a-box>
+      <a-box mixin="chrome" width="0.04" height="0.2" depth="0.04" position="0.4 0.85 1.15"></a-box>
+      <a-box mixin="chrome" width="0.04" height="0.2" depth="0.04" position="-0.4 0.85 1.15"></a-box>
+      <a-text value="Aleron" color="#333" align="center" position="0.85 0.95 1.15" scale="0.3 0.3 0.3"></a-text>
 
-      <!-- Cuello protésico -->
-      <a-cylinder mixin="titanium" radius="0.03" height="0.22"
-                  position="0 -0.22 0.28" rotation="60 0 0"></a-cylinder>
-      <a-text value="Cuello" color="#333" align="center"
-              position="0.3 -0.35 0.3" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Vástago femoral (dentro del fémur) -->
-      <a-cylinder mixin="titanium" radius="0.045" height="0.55"
-                  position="0 -0.65 0.42" rotation="8 0 0"></a-cylinder>
-      <a-text value="Vastago femoral" color="#333" align="center"
-              position="0.35 -0.65 0.42" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Fémur (hueso translúcido que envuelve el vástago) -->
-      <a-cylinder radius="0.09" height="0.75"
-                  material="metalness:0; roughness:0.9; color:#eadfc7; opacity:0.35; transparent:true"
-                  position="0 -0.65 0.42" rotation="8 0 0"></a-cylinder>
-      <a-text value="Femur" color="#333" align="center"
-              position="-0.35 -0.85 0.42" scale="0.3 0.3 0.3"></a-text>
+      <!-- Parachoques delantero -->
+      <a-box mixin="chrome" width="1.28" height="0.12" depth="0.1" position="0 0.2 -1.28"></a-box>
 
     </a-entity>
 
-    <!-- Piso de referencia -->
-    <a-plane rotation="-90 0 0" width="6" height="6" color="#dfeeff" position="0 -1.2 0"></a-plane>
+    <!-- Carretera / piso de referencia -->
+    <a-plane rotation="-90 0 0" width="12" height="30" color="#4a4a4a" position="0 0 0"></a-plane>
+    <a-box width="0.15" height="0.01" depth="1.0" color="#f5f5f5" position="0 0.01 -3"></a-box>
+    <a-box width="0.15" height="0.01" depth="1.0" color="#f5f5f5" position="0 0.01 -1"></a-box>
+    <a-box width="0.15" height="0.01" depth="1.0" color="#f5f5f5" position="0 0.01 1"></a-box>
+    <a-box width="0.15" height="0.01" depth="1.0" color="#f5f5f5" position="0 0.01 3"></a-box>
 
   </a-scene>
 </body>
