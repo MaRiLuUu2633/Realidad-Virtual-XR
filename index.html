@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <title>Visualización 3D - Prótesis de Cadera</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-orbit-controls@1.3.0/dist/aframe-orbit-controls.min.js"></script>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; }
+    html, body { margin: 0; padding: 0; overflow: hidden; font-family: Arial, sans-serif; }
     #info {
       position: absolute;
       top: 10px;
@@ -19,6 +18,7 @@
       max-width: 320px;
       font-size: 14px;
       line-height: 1.4;
+      pointer-events: none;
     }
     #info h2 { margin: 0 0 6px 0; font-size: 16px; }
   </style>
@@ -26,7 +26,7 @@
 <body>
   <div id="info">
     <h2>Prótesis Total de Cadera</h2>
-    Arrastra con el mouse para orbitar la cámara, usa la rueda para hacer zoom.
+    Arrastra con el mouse (o el dedo) para orbitar la cámara. Usa la rueda para hacer zoom.
     <br><br>
     <b>Componentes:</b><br>
     🦴 Hueso pélvico (ilion)<br>
@@ -38,6 +38,101 @@
     🦴 Fémur
   </div>
 
+  <script>
+    AFRAME.registerComponent('simple-orbit', {
+      schema: {
+        target: {type: 'vec3', default: {x: 0, y: -0.15, z: 0}},
+        distance: {type: 'number', default: 1.5},
+        minDistance: {type: 'number', default: 0.4},
+        maxDistance: {type: 'number', default: 5}
+      },
+      init: function () {
+        this.theta = 20;   // ángulo horizontal (grados)
+        this.phi = 70;     // ángulo vertical desde arriba (grados)
+        this.distance = this.data.distance;
+        this.isDragging = false;
+        this.lastX = 0;
+        this.lastY = 0;
+
+        this.onDown = this.onDown.bind(this);
+        this.onMove = this.onMove.bind(this);
+        this.onUp = this.onUp.bind(this);
+        this.onWheel = this.onWheel.bind(this);
+
+        var canvasEl = this.el.sceneEl.canvas;
+        var attach = function (el) {
+          el.addEventListener('mousedown', this.onDown);
+          window.addEventListener('mousemove', this.onMove);
+          window.addEventListener('mouseup', this.onUp);
+          el.addEventListener('wheel', this.onWheel, {passive: false});
+          el.addEventListener('touchstart', this.onDown, {passive: false});
+          window.addEventListener('touchmove', this.onMove, {passive: false});
+          window.addEventListener('touchend', this.onUp);
+        }.bind(this);
+
+        if (canvasEl) {
+          attach(canvasEl);
+        } else {
+          this.el.sceneEl.addEventListener('render-target-loaded', function () {
+            attach(this.el.sceneEl.canvas);
+          }.bind(this));
+        }
+
+        this.updateCamera();
+      },
+      getXY: function (e) {
+        if (e.touches && e.touches.length > 0) {
+          return {x: e.touches[0].clientX, y: e.touches[0].clientY};
+        }
+        return {x: e.clientX, y: e.clientY};
+      },
+      onDown: function (e) {
+        this.isDragging = true;
+        var p = this.getXY(e);
+        this.lastX = p.x;
+        this.lastY = p.y;
+      },
+      onUp: function () {
+        this.isDragging = false;
+      },
+      onMove: function (e) {
+        if (!this.isDragging) return;
+        e.preventDefault();
+        var p = this.getXY(e);
+        var deltaX = p.x - this.lastX;
+        var deltaY = p.y - this.lastY;
+        this.lastX = p.x;
+        this.lastY = p.y;
+        this.theta -= deltaX * 0.3;
+        this.phi -= deltaY * 0.3;
+        this.phi = Math.max(5, Math.min(175, this.phi));
+        this.updateCamera();
+      },
+      onWheel: function (e) {
+        e.preventDefault();
+        this.distance += e.deltaY * 0.0015 * this.distance;
+        this.distance = Math.max(this.data.minDistance, Math.min(this.data.maxDistance, this.distance));
+        this.updateCamera();
+      },
+      updateCamera: function () {
+        var phiRad = THREE.MathUtils.degToRad(this.phi);
+        var thetaRad = THREE.MathUtils.degToRad(this.theta);
+        var t = this.data.target;
+        var x = t.x + this.distance * Math.sin(phiRad) * Math.sin(thetaRad);
+        var y = t.y + this.distance * Math.cos(phiRad);
+        var z = t.z + this.distance * Math.sin(phiRad) * Math.cos(thetaRad);
+        this.el.object3D.position.set(x, y, z);
+        this.el.object3D.lookAt(new THREE.Vector3(t.x, t.y, t.z));
+      },
+      remove: function () {
+        window.removeEventListener('mousemove', this.onMove);
+        window.removeEventListener('mouseup', this.onUp);
+        window.removeEventListener('touchmove', this.onMove);
+        window.removeEventListener('touchend', this.onUp);
+      }
+    });
+  </script>
+
   <a-scene background="color: #cfe8f2">
 
     <a-assets>
@@ -47,33 +142,30 @@
       <a-mixin id="poly" material="metalness: 0; roughness: 0.6; color: #f5f5f0"></a-mixin>
     </a-assets>
 
-    <!-- Cámara con controles de órbita -->
-    <a-entity camera="fov: 50" position="0 1.6 2"
-              orbit-controls="target: 0 1.4 0; minDistance: 0.5; maxDistance: 6; initialPosition: 0.2 1.9 1.4">
-    </a-entity>
+    <!-- Cámara con control de órbita propio -->
+    <a-entity camera="fov: 50" simple-orbit="target: 0 -0.15 0; distance: 1.6; minDistance: 0.4; maxDistance: 5"></a-entity>
 
     <!-- Iluminación -->
     <a-light type="ambient" intensity="0.6"></a-light>
     <a-light type="directional" intensity="0.8" position="2 4 3"></a-light>
     <a-light type="directional" intensity="0.4" position="-2 2 -3"></a-light>
 
-    <!-- Grupo principal: escena anatómica -->
-    <a-entity id="hip-assembly" position="0 1.3 0">
+    <!-- Grupo principal: escena anatómica, centrado en el origen -->
+    <a-entity id="hip-assembly" position="0 0 0">
 
       <!-- Hueso pélvico simplificado (ilion) -->
       <a-entity position="0 0.35 0">
         <a-torus mixin="bone" radius="0.22" radius-tubular="0.07"
                  rotation="90 0 0" position="0 0.05 0"></a-torus>
         <a-sphere mixin="bone" radius="0.16" position="0 0.22 -0.02"></a-sphere>
-        <a-text value="Hueso pélvico (ilion)" color="#333" align="center"
+        <a-text value="Hueso pelvico (ilion)" color="#333" align="center"
                 position="-0.35 0.35 0" scale="0.35 0.35 0.35"></a-text>
       </a-entity>
 
       <!-- Componente acetabular: cotilo metálico -->
       <a-sphere mixin="metal" radius="0.09"
-                theta-start="0" theta-length="100"
-                position="0 0 0" rotation="180 0 0"
-                geometry="primitive: sphere; radius: 0.09; thetaStart: 0; thetaLength: 100"></a-sphere>
+                geometry="primitive: sphere; radius: 0.09; thetaStart: 0; thetaLength: 100"
+                rotation="180 0 0" position="0 0 0"></a-sphere>
       <a-text value="Cotilo acetabular" color="#333" align="center"
               position="0.3 0.05 0" scale="0.3 0.3 0.3"></a-text>
 
@@ -98,20 +190,20 @@
       <!-- Vástago femoral (dentro del fémur) -->
       <a-cylinder mixin="titanium" radius="0.045" height="0.55"
                   position="0 -0.65 0.42" rotation="8 0 0"></a-cylinder>
-      <a-text value="Vástago femoral" color="#333" align="center"
+      <a-text value="Vastago femoral" color="#333" align="center"
               position="0.35 -0.65 0.42" scale="0.3 0.3 0.3"></a-text>
 
       <!-- Fémur (hueso translúcido que envuelve el vástago) -->
-      <a-cylinder mixin="bone" radius="0.09" height="0.75"
+      <a-cylinder radius="0.09" height="0.75"
                   material="metalness:0; roughness:0.9; color:#eadfc7; opacity:0.35; transparent:true"
                   position="0 -0.65 0.42" rotation="8 0 0"></a-cylinder>
-      <a-text value="Fémur" color="#333" align="center"
+      <a-text value="Femur" color="#333" align="center"
               position="-0.35 -0.85 0.42" scale="0.3 0.3 0.3"></a-text>
 
     </a-entity>
 
     <!-- Piso de referencia -->
-    <a-plane rotation="-90 0 0" width="6" height="6" color="#dfeeff" position="0 0 0"></a-plane>
+    <a-plane rotation="-90 0 0" width="6" height="6" color="#dfeeff" position="0 -1.2 0"></a-plane>
 
   </a-scene>
 </body>
