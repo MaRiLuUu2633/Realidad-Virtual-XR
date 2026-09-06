@@ -16,7 +16,7 @@ El entorno virtual se compone de dos secciones principales de acuerdo con la gu�
    * Panel de control con interfaz HMI.
 
 2. **Integración de Modelo CAD Externo:** 
-   Visualización inmersiva de un modelo industrial (`floordyer.glb`). El modelo fue exportado desde software CAD y procesado externamente para optimizar su geometría (reducción de polígonos) asegurando que su peso sea inferior a 25 MB. Esto garantiza un alto rendimiento gráfico y baja latencia en dispositivos móviles y visores VR.
+   Visualización inmersiva de un modelo industrial (`LAB3.glb`). El modelo fue exportado desde software CAD y procesado externamente para optimizar su geometría (reducción de polígonos). Esto garantiza un alto rendimiento gráfico y baja latencia en dispositivos móviles y visores VR.
 
 ## Tecnologías Utilizadas
 * **A-Frame & WebXR:** Renderizado 3D y soporte de realidad inmersiva.
