@@ -1,265 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Visualización 3D - Auto Deportivo</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
-  <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; font-family: Arial, sans-serif; }
-    #info {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 999;
-      background: rgba(0,0,0,0.65);
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      max-width: 320px;
-      font-size: 14px;
-      line-height: 1.4;
-      pointer-events: none;
-    }
-    #info h2 { margin: 0 0 6px 0; font-size: 16px; }
-  </style>
+    <meta charset="utf-8">
+    <title>Planta Industrial de Empaquetado XR</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 </head>
 <body>
-  <div id="info">
-    <h2>Auto Deportivo 3D</h2>
-    Arrastra con el mouse (o el dedo) para orbitar la cámara. Usa la rueda para hacer zoom.<br>
-    Usa las teclas <b>W A S D</b> para desplazarte por la escena.
-    <br><br>
-    <b>Componentes:</b><br>
-    🚗 Chasis / carrocería<br>
-    🪟 Cabina y parabrisas<br>
-    ⚫ Ruedas y llantas<br>
-    💡 Faros delanteros<br>
-    🔴 Luces traseras<br>
-    🏁 Alerón trasero
-  </div>
+    <a-scene>
+        <!-- ENTORNO: Piso y Pared de la fábrica -->
+        <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20" color="#555555"></a-plane>
+        <a-plane position="0 5 -5" width="20" height="10" color="#7F8C8D"></a-plane>
+        <a-sky color="#EAEDED"></a-sky>
 
-  <script>
-    AFRAME.registerComponent('simple-orbit', {
-      schema: {
-        target: {type: 'vec3', default: {x: 0, y: 0.5, z: 0}},
-        distance: {type: 'number', default: 4},
-        minDistance: {type: 'number', default: 1},
-        maxDistance: {type: 'number', default: 10}
-      },
-      init: function () {
-        this.theta = 180;  // ángulo horizontal (grados) - 180 = de frente al auto
-        this.phi = 80;     // ángulo vertical desde arriba (grados) - 90 = altura de los ojos
-        this.distance = this.data.distance;
-        this.isDragging = false;
-        this.lastX = 0;
-        this.lastY = 0;
-        this.keys = {w: false, a: false, s: false, d: false};
+        <!-- SISTEMA INDUSTRIAL (Jerarquía principal) -->
+        <a-entity id="linea-empaquetado" position="0 0 -2">
 
-        this.onDown = this.onDown.bind(this);
-        this.onMove = this.onMove.bind(this);
-        this.onUp = this.onUp.bind(this);
-        this.onWheel = this.onWheel.bind(this);
-        this.onKeyDown = this.onKeyDown.bind(this);
-        this.onKeyUp = this.onKeyUp.bind(this);
+            <!-- 1. BANDA TRANSPORTADORA -->
+            <!-- Patas de soporte -->
+            <a-cylinder position="-3 0.5 0" radius="0.1" height="1" color="#F39C12"></a-cylinder>
+            <a-cylinder position="-3 0.5 1" radius="0.1" height="1" color="#F39C12"></a-cylinder>
+            <a-cylinder position="3 0.5 0" radius="0.1" height="1" color="#F39C12"></a-cylinder>
+            <a-cylinder position="3 0.5 1" radius="0.1" height="1" color="#F39C12"></a-cylinder>
+            
+            <!-- Superficie de la banda -->
+            <a-box position="0 1 0.5" width="7" height="0.1" depth="1.2" color="#2C3E50"></a-box>
+            
+            <!-- Rodillos en los extremos -->
+            <a-cylinder position="-3.5 1 0.5" rotation="90 0 0" radius="0.05" height="1.2" color="#BDC3C7"></a-cylinder>
+            <a-cylinder position="3.5 1 0.5" rotation="90 0 0" radius="0.05" height="1.2" color="#BDC3C7"></a-cylinder>
+            
+            <!-- Guías laterales para evitar que las cajas caigan -->
+            <a-box position="0 1.15 -0.1" width="7" height="0.05" depth="0.05" color="#F39C12"></a-box>
+            <a-box position="0 1.15 1.1" width="7" height="0.05" depth="0.05" color="#F39C12"></a-box>
 
-        var canvasEl = this.el.sceneEl.canvas;
-        var attach = function (el) {
-          el.addEventListener('mousedown', this.onDown);
-          window.addEventListener('mousemove', this.onMove);
-          window.addEventListener('mouseup', this.onUp);
-          el.addEventListener('wheel', this.onWheel, {passive: false});
-          el.addEventListener('touchstart', this.onDown, {passive: false});
-          window.addEventListener('touchmove', this.onMove, {passive: false});
-          window.addEventListener('touchend', this.onUp);
-        }.bind(this);
+            <!-- 2. ARCO DE ESCANEO / SENSORES -->
+            <a-box position="0 1.5 -0.15" width="0.2" height="1" depth="0.2" color="#34495E"></a-box>
+            <a-box position="0 1.5 1.15" width="0.2" height="1" depth="0.2" color="#34495E"></a-box>
+            <a-box position="0 2.1 0.5" width="0.2" height="0.2" depth="1.5" color="#34495E"></a-box>
+            <!-- Lente del escáner láser -->
+            <a-sphere position="0 2 0.5" radius="0.08" color="#E74C3C"></a-sphere>
 
-        if (canvasEl) {
-          attach(canvasEl);
-        } else {
-          this.el.sceneEl.addEventListener('render-target-loaded', function () {
-            attach(this.el.sceneEl.canvas);
-          }.bind(this));
-        }
+            <!-- 3. PRODUCTOS (Cajas en la banda) -->
+            <a-box position="-2.5 1.35 0.5" width="0.6" height="0.6" depth="0.6" color="#D35400"></a-box>
+            <a-box position="-0.8 1.35 0.5" width="0.6" height="0.6" depth="0.6" color="#E67E22"></a-box>
+            <!-- Caja pasando justo por debajo del escáner -->
+            <a-box position="0 1.35 0.5" width="0.6" height="0.6" depth="0.6" color="#D35400"></a-box>
+            <a-box position="2 1.35 0.5" width="0.6" height="0.6" depth="0.6" color="#E67E22"></a-box>
 
-        window.addEventListener('keydown', this.onKeyDown);
-        window.addEventListener('keyup', this.onKeyUp);
+            <!-- 4. BRAZO ROBÓTICO (Pick and Place) AL FINAL DE LA BANDA -->
+            <a-entity id="robot-arm" position="4.2 0 0.5">
+                <!-- Base -->
+                <a-cylinder position="0 0.2 0" radius="0.5" height="0.4" color="#2980B9"></a-cylinder>
+                <a-cylinder position="0 0.7 0" radius="0.3" height="0.6" color="#3498DB"></a-cylinder>
+                <!-- Articulación 1 -->
+                <a-sphere position="0 1 0" radius="0.25" color="#2C3E50"></a-sphere>
+                <!-- Eslabón 1 -->
+                <a-cylinder position="-0.5 1.5 0" rotation="0 0 45" radius="0.15" height="1.5" color="#3498DB"></a-cylinder>
+                <!-- Articulación 2 -->
+                <a-sphere position="-1 2 0" radius="0.2" color="#2C3E50"></a-sphere>
+                <!-- Eslabón 2 bajando hacia la banda -->
+                <a-cylinder position="-1 1.3 0" radius="0.1" height="1.4" color="#3498DB"></a-cylinder>
+                <!-- Efector final (Pinza simple) -->
+                <a-box position="-1 0.6 0" width="0.4" height="0.1" depth="0.4" color="#2C3E50"></a-box>
+            </a-entity>
 
-        this.updateCamera();
-      },
-      getXY: function (e) {
-        if (e.touches && e.touches.length > 0) {
-          return {x: e.touches[0].clientX, y: e.touches[0].clientY};
-        }
-        return {x: e.clientX, y: e.clientY};
-      },
-      onDown: function (e) {
-        this.isDragging = true;
-        var p = this.getXY(e);
-        this.lastX = p.x;
-        this.lastY = p.y;
-      },
-      onUp: function () {
-        this.isDragging = false;
-      },
-      onMove: function (e) {
-        if (!this.isDragging) return;
-        e.preventDefault();
-        var p = this.getXY(e);
-        var deltaX = p.x - this.lastX;
-        var deltaY = p.y - this.lastY;
-        this.lastX = p.x;
-        this.lastY = p.y;
-        this.theta -= deltaX * 0.3;
-        this.phi -= deltaY * 0.3;
-        this.phi = Math.max(5, Math.min(175, this.phi));
-        this.updateCamera();
-      },
-      onWheel: function (e) {
-        e.preventDefault();
-        this.distance += e.deltaY * 0.0015 * this.distance;
-        this.distance = Math.max(this.data.minDistance, Math.min(this.data.maxDistance, this.distance));
-        this.updateCamera();
-      },
-      onKeyDown: function (e) {
-        var k = e.key.toLowerCase();
-        if (k in this.keys) this.keys[k] = true;
-      },
-      onKeyUp: function (e) {
-        var k = e.key.toLowerCase();
-        if (k in this.keys) this.keys[k] = false;
-      },
-      tick: function (time, delta) {
-        if (!delta) return;
-        if (!this.keys.w && !this.keys.a && !this.keys.s && !this.keys.d) return;
+            <!-- 5. PANEL DE CONTROL (Pantalla HMI) -->
+            <a-entity id="panel-hmi" position="-2 0 2.5" rotation="0 30 0">
+                <!-- Pedestal -->
+                <a-cylinder position="0 0.6 0" radius="0.08" height="1.2" color="#7F8C8D"></a-cylinder>
+                <!-- Caja del panel -->
+                <a-box position="0 1.3 0.1" rotation="-20 0 0" width="1" height="0.7" depth="0.2" color="#34495E"></a-box>
+                <!-- Pantalla táctil HMI -->
+                <a-plane position="0 1.32 0.21" rotation="-20 0 0" width="0.8" height="0.5" color="#85C1E9"></a-plane>
+                <!-- Botón de parada de emergencia -->
+                <a-cylinder position="0.35 1.15 0.25" rotation="-20 0 0" radius="0.06" height="0.05" color="#E74C3C"></a-cylinder>
+            </a-entity>
 
-        var moveSpeed = 2.0 * (delta / 1000);
-        var thetaRad = THREE.MathUtils.degToRad(this.theta);
-        var forward = new THREE.Vector3(Math.sin(thetaRad), 0, Math.cos(thetaRad));
-        var right = new THREE.Vector3(Math.cos(thetaRad), 0, -Math.sin(thetaRad));
-        var moveDir = new THREE.Vector3();
-
-        if (this.keys.w) moveDir.add(forward.clone().multiplyScalar(-1));
-        if (this.keys.s) moveDir.add(forward.clone().multiplyScalar(1));
-        if (this.keys.a) moveDir.add(right.clone().multiplyScalar(-1));
-        if (this.keys.d) moveDir.add(right.clone().multiplyScalar(1));
-
-        if (moveDir.lengthSq() > 0) {
-          moveDir.normalize().multiplyScalar(moveSpeed);
-          this.data.target.x += moveDir.x;
-          this.data.target.z += moveDir.z;
-          this.updateCamera();
-        }
-      },
-      updateCamera: function () {
-        var phiRad = THREE.MathUtils.degToRad(this.phi);
-        var thetaRad = THREE.MathUtils.degToRad(this.theta);
-        var t = this.data.target;
-        var x = t.x + this.distance * Math.sin(phiRad) * Math.sin(thetaRad);
-        var y = t.y + this.distance * Math.cos(phiRad);
-        var z = t.z + this.distance * Math.sin(phiRad) * Math.cos(thetaRad);
-        this.el.object3D.position.set(x, y, z);
-        this.el.object3D.lookAt(new THREE.Vector3(t.x, t.y, t.z));
-      },
-      remove: function () {
-        window.removeEventListener('mousemove', this.onMove);
-        window.removeEventListener('mouseup', this.onUp);
-        window.removeEventListener('touchmove', this.onMove);
-        window.removeEventListener('touchend', this.onUp);
-        window.removeEventListener('keydown', this.onKeyDown);
-        window.removeEventListener('keyup', this.onKeyUp);
-      }
-    });
-  </script>
-
-  <a-scene background="color: #bfe3f2">
-
-    <a-assets>
-      <a-mixin id="paint" material="metalness: 0.7; roughness: 0.3; color: #c0392b"></a-mixin>
-      <a-mixin id="glass" material="metalness: 0.1; roughness: 0.05; color: #1b2631; opacity: 0.55; transparent: true"></a-mixin>
-      <a-mixin id="tire" material="metalness: 0.05; roughness: 0.9; color: #1c1c1c"></a-mixin>
-      <a-mixin id="rim" material="metalness: 0.9; roughness: 0.2; color: #d5d8dc"></a-mixin>
-      <a-mixin id="chrome" material="metalness: 0.9; roughness: 0.15; color: #ecf0f1"></a-mixin>
-    </a-assets>
-
-    <!-- Cámara con control de órbita propio -->
-    <a-entity camera="fov: 50" simple-orbit="target: 0 0.5 0; distance: 4; minDistance: 1; maxDistance: 10"></a-entity>
-
-    <!-- Iluminación -->
-    <a-light type="ambient" intensity="0.6"></a-light>
-    <a-light type="directional" intensity="0.9" position="3 5 4"></a-light>
-    <a-light type="directional" intensity="0.4" position="-3 2 -4"></a-light>
-
-    <!-- Grupo principal: el auto, centrado en el origen -->
-    <a-entity id="car" position="0 0 0">
-
-      <!-- Chasis / carrocería principal -->
-      <a-box mixin="paint" width="1.3" height="0.35" depth="2.6" position="0 0.35 0"></a-box>
-      <a-text value="Chasis" color="#333" align="center" position="0.9 0.35 0" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Cabina -->
-      <a-box mixin="paint" width="1.0" height="0.42" depth="1.3" position="0 0.72 -0.1"></a-box>
-      <a-text value="Cabina" color="#333" align="center" position="0.85 0.85 -0.1" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Parabrisas delantero -->
-      <a-box mixin="glass" width="0.92" height="0.4" depth="0.05"
-             position="0 0.75 -0.74" rotation="-20 0 0"></a-box>
-      <a-text value="Parabrisas" color="#333" align="center" position="-0.85 0.9 -0.74" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Luneta trasera -->
-      <a-box mixin="glass" width="0.92" height="0.38" depth="0.05"
-             position="0 0.74 0.54" rotation="18 0 0"></a-box>
-
-      <!-- Ventanas laterales -->
-      <a-box mixin="glass" width="0.05" height="0.3" depth="1.0" position="0.48 0.75 -0.1"></a-box>
-      <a-box mixin="glass" width="0.05" height="0.3" depth="1.0" position="-0.48 0.75 -0.1"></a-box>
-
-      <!-- Ruedas y llantas (4) -->
-      <a-entity id="wheel-fl" position="0.68 0.3 -0.85">
-        <a-cylinder mixin="tire" radius="0.3" height="0.22" rotation="0 0 90"></a-cylinder>
-        <a-cylinder mixin="rim" radius="0.15" height="0.24" rotation="0 0 90"></a-cylinder>
-      </a-entity>
-      <a-entity id="wheel-fr" position="-0.68 0.3 -0.85">
-        <a-cylinder mixin="tire" radius="0.3" height="0.22" rotation="0 0 90"></a-cylinder>
-        <a-cylinder mixin="rim" radius="0.15" height="0.24" rotation="0 0 90"></a-cylinder>
-      </a-entity>
-      <a-entity id="wheel-rl" position="0.68 0.3 0.85">
-        <a-cylinder mixin="tire" radius="0.3" height="0.22" rotation="0 0 90"></a-cylinder>
-        <a-cylinder mixin="rim" radius="0.15" height="0.24" rotation="0 0 90"></a-cylinder>
-      </a-entity>
-      <a-entity id="wheel-rr" position="-0.68 0.3 0.85">
-        <a-cylinder mixin="tire" radius="0.3" height="0.22" rotation="0 0 90"></a-cylinder>
-        <a-cylinder mixin="rim" radius="0.15" height="0.24" rotation="0 0 90"></a-cylinder>
-      </a-entity>
-      <a-text value="Ruedas" color="#333" align="center" position="1.0 0.3 0.85" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Faros delanteros -->
-      <a-sphere mixin="chrome" radius="0.08" position="0.45 0.35 -1.29" material="emissive:#fff9c4; emissiveIntensity:0.4"></a-sphere>
-      <a-sphere mixin="chrome" radius="0.08" position="-0.45 0.35 -1.29" material="emissive:#fff9c4; emissiveIntensity:0.4"></a-sphere>
-      <a-text value="Faros" color="#333" align="center" position="0.85 0.35 -1.29" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Luces traseras -->
-      <a-box width="0.12" height="0.1" depth="0.03" color="#c0392b" position="0.45 0.35 1.29" material="emissive:#e74c3c; emissiveIntensity:0.5"></a-box>
-      <a-box width="0.12" height="0.1" depth="0.03" color="#c0392b" position="-0.45 0.35 1.29" material="emissive:#e74c3c; emissiveIntensity:0.5"></a-box>
-      <a-text value="Luces traseras" color="#333" align="center" position="-0.9 0.35 1.29" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Alerón trasero -->
-      <a-box mixin="chrome" width="1.05" height="0.04" depth="0.18" position="0 0.95 1.15"></a-box>
-      <a-box mixin="chrome" width="0.04" height="0.2" depth="0.04" position="0.4 0.85 1.15"></a-box>
-      <a-box mixin="chrome" width="0.04" height="0.2" depth="0.04" position="-0.4 0.85 1.15"></a-box>
-      <a-text value="Aleron" color="#333" align="center" position="0.85 0.95 1.15" scale="0.3 0.3 0.3"></a-text>
-
-      <!-- Parachoques delantero -->
-      <a-box mixin="chrome" width="1.28" height="0.12" depth="0.1" position="0 0.2 -1.28"></a-box>
-
-    </a-entity>
-
-    <!-- Carretera / piso de referencia -->
-    <a-plane rotation="-90 0 0" width="12" height="30" color="#4a4a4a" position="0 0 0"></a-plane>
-    <a-box width="0.15" height="0.01" depth="1.0" color="#f5f5f5" position="0 0.01 -3"></a-box>
-    <a-box width="0.15" height="0.01" depth="1.0" color="#f5f5f5" position="0 0.01 -1"></a-box>
-    <a-box width="0.15" height="0.01" depth="1.0" color="#f5f5f5" position="0 0.01 1"></a-box>
-    <a-box width="0.15" height="0.01" depth="1.0" color="#f5f5f5" position="0 0.01 3"></a-box>
-
-  </a-scene>
+        </a-entity>
+    </a-scene>
 </body>
 </html>
