@@ -47,8 +47,8 @@
         maxDistance: {type: 'number', default: 10}
       },
       init: function () {
-        this.theta = 30;   // ángulo horizontal (grados)
-        this.phi = 65;     // ángulo vertical desde arriba (grados)
+        this.theta = 180;  // ángulo horizontal (grados) - 180 = de frente al auto
+        this.phi = 80;     // ángulo vertical desde arriba (grados) - 90 = altura de los ojos
         this.distance = this.data.distance;
         this.isDragging = false;
         this.lastX = 0;
