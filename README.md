@@ -27,7 +27,7 @@ El entorno virtual se compone de dos secciones principales de acuerdo con la gu�
 ## Cómo Visualizar el Proyecto
 El entorno está alojado públicamente y es accesible desde cualquier navegador moderno compatible con WebXR.
 
-🔗 **[Haz clic aquí para ingresar a la Planta Industrial XR](https://tu-usuario.github.io/tu-repositorio/)** *(Nota: Inserta tu enlace real aquí)*
+🔗 **[Haz clic aquí para ingresar a la Planta Industrial XR](https://mariluuu2633.github.io/Realidad-Virtual-XR/)** *(Nota: Inserta tu enlace real aquí)*
 
 ### Instrucciones por Plataforma:
 * 💻 **PC de Escritorio:** Haz clic y arrastra el ratón para mirar alrededor. Usa las flechas del teclado o las teclas `W A S D` para desplazarte por la planta.
